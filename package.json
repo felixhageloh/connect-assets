@@ -20,11 +20,15 @@
     {
       "name": "Blake VanLandingham",
       "email": "blakevanlan@gmail.com"
+    },
+    {
+      "name": "Felix Hageloh",
+      "email": "felix.hageloh@gmail.com"
     }
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/adunkman/connect-assets.git"
+    "url": "https://github.com/felixhageloh/connect-assets.git"
   },
   "engines": {
     "node": ">=0.8.0"
