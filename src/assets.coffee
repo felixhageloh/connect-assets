@@ -197,7 +197,14 @@ class ConnectAssets
             @cssSourceFiles[sourcePath] = {data, mtime: stats.mtime}
             source = data.toString 'utf8'
           startTime = new Date
+
+          cssCompilers[ext].resolution = '1x'
           css = cssCompilers[ext].compileSync @absPath(sourcePath), source
+
+          if @options.splitHighResAssets
+            cssCompilers[ext].resolution = '2x'
+            css2x = cssCompilers[ext].compileSync @absPath(sourcePath), source
+
           if css is @compiledCss[sourcePath]?.data.toString 'utf8'
             alreadyCached = true
           else
@@ -210,17 +217,23 @@ class ConnectAssets
         else if alreadyCached
           return "/#{route}"
         else if @options.build
-          filename = @options.buildFilenamer route, css
+          filename   = @options.buildFilenamer route, css
+          dot        = filename.lastIndexOf '.'
+          filename2x = filename[0...dot] + '@2x' + filename[dot..]
           @buildFilenames[sourcePath] = filename
           cacheFlags = {expires: @options.buildsExpire, mtime}
           @cache.set filename, css, cacheFlags
+          @cache.set filename2x, css2x, cacheFlags if css2x?
           if @options.buildDir
-            buildPath = path.join process.cwd(), @options.buildDir, filename
+            buildPath   = path.join process.cwd(), @options.buildDir, filename
+            buildPath2x = path.join process.cwd(), @options.buildDir, filename2x
             mkdirRecursive path.dirname(buildPath), 0o0755, ->
               fs.writeFile buildPath, css
+              fs.writeFile buildPath2x, css2x if css2x?
           return @cachedRoutePaths[route] = "/#{filename}"
         else
           @cache.set route, css, {mtime}
+          @cache.set stripExt(route)+'@2x.css', css2x, {mtime} if css2x?
           return @cachedRoutePaths[route] = "/#{route}"
       catch e
         if e.code is 'ENOENT' then continue else throw e
